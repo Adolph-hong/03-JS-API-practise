@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0px;
+            padding: 0px;
+        }
+
+        body {
+            color: white;
+            background-image: url(./img/下雨.gif);
+        }
+
+        p {
+            color: rgb(206, 206, 52);
+            font-size: 16px;
+        }
+
+        h3 {
+            font-size: 30px;
+        }
+
+        .all {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 100px 0px 0px 0px;
+        }
+
+        .btn-block {
+            width: 90%;
+            gap: 20px;
+            margin-top: 100px;
+            border-bottom: 2px solid rgb(115, 111, 111);
+            display: flex;
+            justify-content: center;
+        }
+
+        button {
+            width: 10%;
+            height: auto;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            background-color: rgba(5, 75, 110);
+            border: none;
+            border-radius: 10px 10px 0 0;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: skyblue;
+        }
+
+        .card:hover {
+            background-color: rgb(99, 119, 136);
+        }
+
+        .card-box {
+            width: 90%;
+            gap: 15px;
+            margin: 50px 0px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            width: 300px;
+            background: rgba(5, 75, 110);
+            border-radius: 10px;
+            padding: 38px 0px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .card p {
+            font-size: 26px;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="all">
+        <h1>今天與明天的 36 小時天氣預報</h1>
+        <h2></h2>
+
+        <div class="btn-block">
+            <button type="button" class="all-btn">全部</button>
+            <button type="button" class="">北部</button>
+            <button type="button" class="">中部</button>
+            <button type="button" class="">南部</button>
+            <button type="button" class="">東部</button>
+            <button type="button" class="">離島</button>
+        </div>
+
+        <div class="card-box"></div>
+    </div>
+
+    <script>
+
+        const boxAll = [
+            ['基隆市', '新北市', '臺北市', '桃園市', '新竹市', '新竹縣', '苗栗縣', '臺中市', '南投縣', '彰化縣', '雲林縣', '嘉義市', '嘉義縣', '臺南市', '高雄市', '屏東縣',
+                '宜蘭縣', '花蓮縣', '臺東縣', '澎湖縣', '金門縣', '連江縣'
+            ],
+            ['基隆市', '新北市', '臺北市', '桃園市', '新竹市', '新竹縣', '苗栗縣'],
+            ['臺中市', '南投縣', '彰化縣', '雲林縣', '嘉義市', '嘉義縣'],
+            ['臺南市', '高雄市', '屏東縣'],
+            ['宜蘭縣', '花蓮縣', '臺東縣'],
+            ['澎湖縣', '金門縣', '連江縣'],
+        ]
+
+        const cardbox = document.querySelector('.card-box');
+        const allBtn = document.querySelectorAll('button');
+        const title2 = document.querySelector('h2');
+
+        let nowbox = boxAll[0];
+
+        const url =
+            'https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=CWB-0FAD15EC-3C0A-4AC6-B426-34FD9DD873FC';
+
+        let orginalData;
+        let orgData = {};
+
+        fetchData();
+        btnListener();
+
+        function btnListener() {
+            allBtn.forEach((btn, index) => {
+                btn.addEventListener('click', () => {
+                    nowbox = boxAll[index];
+                    arrangeData();
+                });
+            });
+        }
+
+        function fetchData() {
+            fetch(url)
+                .then((response) => response.json())
+                .then((result) => {
+                    console.log(result);
+                    orginalData = result;
+                    console.log(orginalData);
+                    const updateTime = orginalData.records.location[0].weatherElement[0].time[0].startTime;
+                    title2.textContent = `天氣預報更新時間: ${updateTime}`;
+                    organizationData();
+                    arrangeData();
+                    btnListener();
+                });
+        }
+
+        function organizationData() {
+            let locations = orginalData.records.location;
+            locations.forEach((location) => {
+                let locationName = location.locationName;
+                locWE0T0 = location.weatherElement[0].time[0];
+                let wxCondition = locWE0T0.parameter.parameterName;
+                let parameterValue = locWE0T0.parameter.parameterValue;
+                let startTime = locWE0T0.startTime;
+                let maxT = location.weatherElement[4].time[0].parameter.parameterName;
+                console.log(maxT);
+                let minT = location.weatherElement[2].time[0].parameter.parameterName;
+                console.log(minT);
+                let pop = location.weatherElement[1].time[0].parameter.parameterName;
+                let tem = Math.round((maxT * 1 + minT * 1) / 2);
+
+                orgData[locationName] = {
+                    'Wx': wxCondition,
+                    'WxValue': parameterValue,
+                    'startTime': startTime,
+                    'maxT': maxT,
+                    'minT': minT,
+                    'pop': pop,
+                    'tem': tem
+                }
+            });
+        }
+
+        function arrangeData() {
+            cardbox.innerHTML = '';
+            nowbox.forEach((city) => {
+                let cityData = orgData[city];
+                showAllcard(city, cityData)
+            })
+        }
+
+        function showAllcard(city, cityData) {
+            let WxValue = cityData.WxValue;
+            if (WxValue * 1 < 10) {
+                WxValue = '0' + WxValue;
+            };
+
+            let imgUrl = `https://www.cwa.gov.tw/V8/assets/img/weather_icons/weathers/svg_icon/day/${WxValue}.svg`;
+
+            cardbox.innerHTML +=
+        `
+        <div class="card">
+        <h3>${city}</h3>
+        <img src = ${imgUrl}>
+        <p>${cityData.tem}°</p>
+        <p>${cityData.Wx}</p>
+        <p>💧 ${cityData.pop}%</p>
+        <br/>
+        <p>🌡 ${cityData.maxT}° / ${cityData.minT}°</p>
+        </div>
+        `;
+        }
+    </script>
+</body>
+
+</html>
